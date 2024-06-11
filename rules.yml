@@ -1,0 +1,156 @@
+groups:
+- name: synology
+  rules:
+
+######################
+#    check exporter
+#######################
+  - alert: SynologyExporterDown
+    expr: up{job="synology"} != 1
+    annotations:
+      summary: "Synology exporter is down"
+    labels:
+      severity: warning
+      category: synology
+
+########################
+#    system temperature
+#######################
+  - alert: SynologyHighTemp
+    expr: temperature{job="synology"} > 40
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) temperature is high {{ $value }}"
+    labels:
+      severity: warning
+      category: synology
+
+##########################
+#    system status
+##########################
+  - alert: SynologySystemStatusDegraded
+    expr: systemStatus{job="synology"} != 1
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) system status is not normal"
+    labels:
+      severity: warning
+      category: synology
+
+
+#########################
+#    FAN
+#########################
+  - alert: SynologySystemFanFailed
+    expr: systemFanStatus{job="synology"} != 1
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) system fan has problem"
+    labels:
+      severity: warning
+      category: synology
+
+  - alert: SynologyCPUFanFailed
+    expr: cpuFanStatus{job="synology"} != 1
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) cpu fan has problem"
+    labels:
+      severity: warning
+      category: synology
+
+#######################
+#    Power
+######################
+  - alert: SynologyPowerDegraded
+    expr: powerStatus{job="synology"} != 1
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) power is not normal"
+    labels:
+      severity: warning
+      category: synology
+
+#########################
+#     check uptime
+########################
+  - alert: SynologyUptimeIsLow
+    expr: (sysUpTime{job="synology"} / 100) < 3600
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) uptime is less that 1h"
+    labels:
+      severity: warning
+      category: synology
+
+#########################
+#    disk
+#######################
+
+#  - alert: SynologyDiskInitialized
+#    expr: diskStatus{job="synology"} == 2
+#    for: 1h
+#    labels:
+#      severity: warning
+#      category: synology
+#    annotations:
+#      summary: "Synology {{ $value.instance }}({{ $labels.name }}) Disk {{ $labels.diskID }} is in Initialized status for more that 1h"
+
+  - alert: SynologyDiskNotInitialized
+    expr: diskStatus{job="synology"} == 3
+    for: 5m
+    labels:
+      severity: warning
+      category: synology
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) Disk {{ $labels.diskID }} Status is Not Initialized"
+
+  - alert: SynologyDiskSystemPartitionFailed
+    expr: diskStatus{job="synology"} == 4
+    for: 5m
+    labels:
+      category: synology
+      severity: critical
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) Disk {{ $labels.diskID }} Partition Failed"
+
+  - alert: SynologyDiskCrashed
+    expr: diskStatus{job="synology"} == 5
+    for: 1m
+    labels:
+      severity: critical
+      category: synology
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) Disk {{ $labels.diskID }} Crashed"
+
+
+#######################
+#   check raid
+######################
+  - alert: SynologyRaidFailed
+    expr: raidStatus{job="synology"} != 1
+    for: 5m
+    labels:
+      severity: critical
+      category: synology
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) raid {{ $labels.raidName }} failed"
+
+#######################
+#   check free space
+######################
+  - alert: SynologyLowFreeSpace
+    expr: ((raidTotalSize{job=~'$job',instance=~'$instance'}-raidFreeSize{job=~'$job',instance=~'$instance',raidName="Volume 1"})/raidTotalSize{job=~'$job',instance=~'$instance',raidName="Volume 1"})*100 > 80
+    for: 5m
+    labels:
+      severity: warning
+      category: synology
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) Free Space is low current pecrcantage is {{ $value }}"
+
+
+#######################
+#   Netowrk port
+######################
+  - alert: Synology_PortDown
+    expr: ifOperStatus{job=~"synology"} != 1
+    for: 5m
+    annotations:
+      summary: "Synology {{ $labels.instance }}({{ $labels.name }}) Port {{ $labels.ifName }} is down" 
+    labels:
+      severity: warning
+      category: synology
